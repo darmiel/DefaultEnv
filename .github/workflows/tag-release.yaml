@@ -52,13 +52,13 @@ jobs:
           GOOS=windows GOARCH=amd64 go build -o DefaultEnv.win64 DefaultEnv_plugin.go
           GOOS=darwin GOARCH=amd64 go build -o DefaultEnv.osx DefaultEnv_plugin.go
           GOOS=darwin GOARCH=arm64 go build -o DefaultEnv.osxarm DefaultEnv_plugin.go
-          shasum -a 1 DefaultEnv.* > shasum.txt
-   
-      - name: Read shasum.txt File
+          
+
+      - name: Create Checksums
         id: read-shasum
         run: |
           echo "shasum<<EOF" >> $GITHUB_OUTPUT
-          cat shasum.txt >> $GITHUB_OUTPUT
+          shasum -a 1 DefaultEnv.* >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Upload Binaries
