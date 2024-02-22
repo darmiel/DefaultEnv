@@ -34,29 +34,6 @@ jobs:
 
   upload:
     needs: release
-    strategy:
-      matrix:
-        include:
-          - goos: linux
-            goarch: amd64
-            name: linux64
-
-          - goos: windows
-            goarch: 386
-            name: win32
-
-          - goos: windows
-            goarch: amd64
-            name: win64
-
-          - goos: darwin
-            goarch: amd64
-            name: osx
-
-          - goos: darwin
-            goarch: arm64
-            name: osxarm
-    
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
