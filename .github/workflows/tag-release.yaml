@@ -56,7 +56,10 @@ jobs:
    
       - name: Read shasum.txt File
         id: read-shasum
-        run: echo "shasum=$(cat shasum.txt)" >> $GITHUB_OUTPUT
+        run: |
+          echo "shasum<<EOF" >> $GITHUB_OUTPUT
+          cat shasum.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Upload Binaries
         id: upload-release-asset
