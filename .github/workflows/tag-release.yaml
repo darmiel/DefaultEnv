@@ -1,0 +1,89 @@
+name: "Create GitHub Release"
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.20
+      - run: go get -t -v ./...
+      - run: go test -v -race ./...
+
+  release:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Create Release
+        id: create
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+    outputs:
+      upload_url: ${{ steps.create.outputs.upload_url }}
+
+  upload:
+    needs: release
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: 386
+            name: linux32
+            
+          - goos: linux
+            goarch: amd64
+            name: linux64
+
+          - goos: windows
+            goarch: 386
+            name: win32
+
+          - goos: windows
+            goarch: amd64
+            name: win64
+
+          - goos: darwin
+            goarch: amd64
+            name: osx
+
+          - goos: darwin
+            goarch: arm64
+            name: osxarm
+    
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.20'
+
+      - name: Download go dependencies
+        run: go get -t -v ./...
+
+      - name: Build Binaries
+        run: |
+          mkdir -p bin
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o bin/DefaultEnv.${{ matrix.name }} DefaultEnv_plugin.go
+          sha256sum bin/DefaultEnv.${{ matrix.name }} > bin/DefaultEnv.${{ matrix.name }}.sha256
+   
+      - name: Upload Binaries
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            bin/DefaultEnv.${{ matrix.name }}
+            bin/DefaultEnv.${{ matrix.name }}.sha256
