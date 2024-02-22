@@ -20,14 +20,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - name: Create Release
+      - name: Create GitHub Release
         id: create
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          name: ${{ github.ref }}
           tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
           draft: false
           prerelease: false
     outputs:
