@@ -38,10 +38,6 @@ jobs:
       matrix:
         include:
           - goos: linux
-            goarch: 386
-            name: linux32
-            
-          - goos: linux
             goarch: amd64
             name: linux64
 
@@ -73,10 +69,18 @@ jobs:
 
       - name: Build Binaries
         run: |
-          mkdir -p bin
-          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o bin/DefaultEnv.${{ matrix.name }} DefaultEnv_plugin.go
-          sha256sum bin/DefaultEnv.${{ matrix.name }} > bin/DefaultEnv.${{ matrix.name }}.sha256
+          GOOS=linux GOARCH=386 go build -o DefaultEnv.linux32 DefaultEnv_plugin.go
+          GOOS=linux GOARCH=amd64 go build -o DefaultEnv.linux64 DefaultEnv_plugin.go
+          GOOS=windows GOARCH=386 go build -o DefaultEnv.win32 DefaultEnv_plugin.go
+          GOOS=windows GOARCH=amd64 go build -o DefaultEnv.win64 DefaultEnv_plugin.go
+          GOOS=darwin GOARCH=amd64 go build -o DefaultEnv.osx DefaultEnv_plugin.go
+          GOOS=darwin GOARCH=arm64 go build -o DefaultEnv.osxarm DefaultEnv_plugin.go
+          shasum -a 1 DefaultEnv.* > shasum.txt
    
+      - name: Read shasum.txt File
+        id: read-shasum
+        run: echo "shasum=$(cat shasum.txt)" >> $GITHUB_OUTPUT
+
       - name: Upload Binaries
         id: upload-release-asset
         uses: softprops/action-gh-release@v1
@@ -84,5 +88,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            bin/DefaultEnv.${{ matrix.name }}
-            bin/DefaultEnv.${{ matrix.name }}.sha256
+            DefaultEnv.linux32
+            DefaultEnv.linux64
+            DefaultEnv.win32
+            DefaultEnv.win64
+            DefaultEnv.osx
+            DefaultEnv.osxarm
+            shasum.txt
+          append_body: true
+          body: |
+            ---
+            **SHA-1 Sums:**
+
+            ```
+            ${{ steps.read-shasum.outputs.shasum }}
+            ```
